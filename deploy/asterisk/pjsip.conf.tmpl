@@ -1,0 +1,87 @@
+; Rendered at container start by entrypoint.sh (envsubst). Do not put secrets in this template.
+
+; ---------------------------------------------------------------- transports
+[transport-udp]            ; public side: IPTSP
+type=transport
+protocol=udp
+bind=0.0.0.0:5060
+external_signaling_address=${PUBLIC_IP}
+external_media_address=${PUBLIC_IP}
+
+[transport-local]          ; internal side: LiveKit SIP on the same host (no NAT rewriting)
+type=transport
+protocol=udp
+bind=127.0.0.1:5061
+
+; ---------------------------------------------------------------- IPTSP (we register as a phone)
+[iptsp-auth]
+type=auth
+auth_type=userpass
+username=${IPTSP_USER}
+password=${IPTSP_PASSWORD}
+
+[iptsp-reg]
+type=registration
+transport=transport-udp
+outbound_auth=iptsp-auth
+server_uri=sip:${IPTSP_HOST}:${IPTSP_PORT}
+client_uri=sip:${IPTSP_USER}@${IPTSP_HOST}:${IPTSP_PORT}
+contact_user=${IPTSP_USER}
+retry_interval=30
+forbidden_retry_interval=300
+fatal_retry_interval=300
+max_retries=100000
+expiration=300
+line=yes
+endpoint=iptsp
+
+[iptsp]
+type=aor
+contact=sip:${IPTSP_HOST}:${IPTSP_PORT}
+qualify_frequency=60
+
+[iptsp]
+type=endpoint
+transport=transport-udp
+context=from-iptsp
+disallow=all
+allow=alaw                 ; G.711 a-law first (BD IPTSPs), u-law as fallback. No G.729: it needs transcoding
+allow=ulaw
+aors=iptsp
+outbound_auth=iptsp-auth
+from_user=${IPTSP_USER}
+from_domain=${IPTSP_HOST}
+direct_media=no
+rtp_symmetric=yes
+force_rport=yes
+rewrite_contact=yes
+trust_id_inbound=yes
+dtmf_mode=rfc4733
+
+[iptsp]                    ; only the IPTSP may place calls to us (plus the registration "line" match)
+type=identify
+endpoint=iptsp
+match=${IPTSP_ALLOWED_IP}
+
+; ---------------------------------------------------------------- LiveKit SIP (localhost)
+[livekit]
+type=aor
+contact=sip:127.0.0.1:5080
+
+[livekit]
+type=endpoint
+transport=transport-local
+context=from-livekit
+disallow=all
+allow=alaw
+allow=ulaw
+aors=livekit
+direct_media=no
+rtp_symmetric=yes
+force_rport=yes
+dtmf_mode=rfc4733
+
+[livekit]
+type=identify
+endpoint=livekit
+match=127.0.0.1

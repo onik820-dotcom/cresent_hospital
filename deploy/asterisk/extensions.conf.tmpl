@@ -1,0 +1,27 @@
+; Rendered at container start by entrypoint.sh (envsubst).
+[general]
+static=yes
+writeprotect=no
+
+; Inbound hotline call: hand it to LiveKit SIP, keeping the caller ID and the dialled number.
+; LiveKit exposes them to the worker as sip.phoneNumber (caller) and sip.trunkPhoneNumber (dialled).
+[from-iptsp]
+exten => _.,1,NoOp(Inbound call from ${CALLERID(num)} to ${EXTEN})
+ same => n,Set(CALLED=${CALLED_NUMBER})
+ same => n,ExecIf($["${CALLED}" = ""]?Set(CALLED=${EXTEN}))
+ same => n,Dial(PJSIP/${CALLED}@livekit,60)
+ same => n,Hangup()
+
+; Calls coming back from LiveKit = SIP REFER transfers to reception (a mobile or landline). Sent out
+; through the IPTSP. The caller ID is set to our own SIP account because most BD IPTSPs reject a foreign CLI.
+[from-livekit]
+exten => _+880X.,1,NoOp(Transfer to ${EXTEN})
+ same => n,Set(CALLERID(num)=${IPTSP_USER})
+ same => n,Dial(PJSIP/${OUTBOUND_PREFIX}${EXTEN:4}@iptsp,60)
+ same => n,Hangup()
+exten => _880X.,1,Set(CALLERID(num)=${IPTSP_USER})
+ same => n,Dial(PJSIP/${OUTBOUND_PREFIX}${EXTEN:3}@iptsp,60)
+ same => n,Hangup()
+exten => _.,1,Set(CALLERID(num)=${IPTSP_USER})
+ same => n,Dial(PJSIP/${EXTEN}@iptsp,60)
+ same => n,Hangup()

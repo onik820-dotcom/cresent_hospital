@@ -1,0 +1,8 @@
+# LiveKit SIP bridge. Talks only to Asterisk on localhost; never exposed to the internet.
+# api_key / api_secret / ws_url come from environment variables (see docker-compose.yml).
+redis:
+  address: 127.0.0.1:6379
+sip_port: 5080            # Asterisk dials here (127.0.0.1:5080)
+rtp_port: 30000-40000     # must NOT overlap Asterisk (10000-20000) or WebRTC (50000-60000); not opened in ufw
+health_port: 8082
+log_level: info

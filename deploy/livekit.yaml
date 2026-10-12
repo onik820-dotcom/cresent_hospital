@@ -1,0 +1,13 @@
+# LiveKit server. API keys come from the LIVEKIT_KEYS env var (see docker-compose.yml), never from this file.
+port: 7880
+bind_addresses:
+  - "127.0.0.1"          # only Caddy (TLS, wss://) and local services reach the API
+rtc:
+  tcp_port: 7881          # WebRTC over TCP fallback
+  port_range_start: 50000 # WebRTC media (browser test calls)
+  port_range_end: 60000
+  use_external_ip: true
+redis:
+  address: 127.0.0.1:6379
+logging:
+  level: info

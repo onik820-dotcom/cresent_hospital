@@ -1,0 +1,4 @@
+# TLS + secure websockets for the dashboard's browser test calls (wss://VOICE_DOMAIN -> LiveKit 7880).
+{$VOICE_DOMAIN} {
+	reverse_proxy 127.0.0.1:7880
+}
