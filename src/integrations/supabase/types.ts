@@ -1923,6 +1923,75 @@ export type Database = {
           },
         ]
       }
+      shift_summary: {
+        Row: {
+          calculated_at: string
+          cash_counted: number | null
+          cash_expected: number | null
+          cash_sales: number | null
+          cash_variance: number | null
+          credit_sales: number | null
+          litres_sold: number | null
+          lubricant_sales: number | null
+          recalculated_by: string | null
+          shift_id: string
+          stock_variance_litres: number | null
+          stock_variance_pct: number | null
+          tank_book_closing: number | null
+          tank_physical_closing: number | null
+          tanks_flagged: number
+        }
+        Insert: {
+          calculated_at?: string
+          cash_counted?: number | null
+          cash_expected?: number | null
+          cash_sales?: number | null
+          cash_variance?: number | null
+          credit_sales?: number | null
+          litres_sold?: number | null
+          lubricant_sales?: number | null
+          recalculated_by?: string | null
+          shift_id: string
+          stock_variance_litres?: number | null
+          stock_variance_pct?: number | null
+          tank_book_closing?: number | null
+          tank_physical_closing?: number | null
+          tanks_flagged?: number
+        }
+        Update: {
+          calculated_at?: string
+          cash_counted?: number | null
+          cash_expected?: number | null
+          cash_sales?: number | null
+          cash_variance?: number | null
+          credit_sales?: number | null
+          litres_sold?: number | null
+          lubricant_sales?: number | null
+          recalculated_by?: string | null
+          shift_id?: string
+          stock_variance_litres?: number | null
+          stock_variance_pct?: number | null
+          tank_book_closing?: number | null
+          tank_physical_closing?: number | null
+          tanks_flagged?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_summary_recalculated_by_fkey"
+            columns: ["recalculated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_summary_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: true
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shifts: {
         Row: {
           closed_at: string | null
@@ -2996,6 +3065,14 @@ export type Database = {
           email: string
           role: Database["public"]["Enums"]["user_role"]
         }[]
+      }
+      admin_exists: {
+        Args: never
+        Returns: boolean
+      }
+      recalculate_shift: {
+        Args: { p_shift_id: string }
+        Returns: Json
       }
       admin_reclose_shift: {
         Args: { p_payload: Json; p_shift_id: string }
