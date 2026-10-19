@@ -37,7 +37,7 @@ BEGIN
 
   IF p_role NOT IN ('manager', 'dispenser', 'accountant') THEN
     RAISE EXCEPTION
-      'An invitation link may only create a pump manager, a manager or an accountant. An admin or MD account is made deliberately, not by whoever holds a URL.'
+      'An invitation link may only create a dispenser, a manager or an accountant. An admin or MD account is made deliberately, not by whoever holds a URL.'
       USING ERRCODE = 'insufficient_privilege';
   END IF;
 
@@ -84,4 +84,4 @@ REVOKE EXECUTE ON FUNCTION public.create_invitation(text, public.user_role, text
 GRANT EXECUTE ON FUNCTION public.create_invitation(text, public.user_role, text, text, text, integer) TO authenticated;
 
 COMMENT ON FUNCTION public.create_invitation(text, public.user_role, text, text, text, integer) IS
-  'SECURITY DEFINER: checks auth.users for an existing account, which no client role may read. Admin-only, and refuses any role but dispenser (Pump Manager), manager or accountant.';
+  'SECURITY DEFINER: checks auth.users for an existing account, which no client role may read. Admin-only, and refuses any role but dispenser, manager or accountant.';

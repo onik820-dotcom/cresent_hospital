@@ -1,4 +1,5 @@
 import { AdminDelete } from '@/components/admin-delete';
+import { AdminEdit } from '@/components/admin-edit';
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Minus } from "lucide-react";
@@ -118,7 +119,7 @@ function Loaded() {
                     </td>
                     <td className="tabular px-2 py-2 text-right font-medium state-ok">{r.dir === "in" ? formatBDT(r.amount, lang) : ""}</td>
                     <td className="tabular px-2 py-2 text-right font-medium state-breach">{r.dir === "out" ? formatBDT(r.amount, lang) : ""}</td>
-                    <td className="w-8 px-1"><AdminDelete table="expenses" id={r.id} /></td>
+                    <td className="w-16 whitespace-nowrap px-1"><AdminEdit table="expenses" id={r.id} /><AdminDelete table="expenses" id={r.id} /></td>
                   </tr>
                 ))}
               </tbody>

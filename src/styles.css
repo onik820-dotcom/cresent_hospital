@@ -244,6 +244,16 @@ table th {
     display: block !important;
   }
 
+  /* The daily sheet has a short phone card and the full paper form; paper
+     always gets the form, whatever size the screen was. */
+  .sheet-mobile {
+    display: none !important;
+  }
+
+  .sheet-paper {
+    display: block !important;
+  }
+
   .glass {
     background: #fff !important;
     backdrop-filter: none !important;

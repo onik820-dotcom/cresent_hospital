@@ -57,6 +57,13 @@ export interface CloseContext {
   /** The previous shift's counted cash becomes this shift's opening cash. */
   openingCash: string;
   lastRate: string | null;
+  /** The rate the shift closed on three days before this one, to flag a price change. */
+  rateThreeDaysAgo: string | null;
+  /**
+   * Litres per nozzle when each of the last five closed shifts used the same
+   * test quantity on every nozzle. Null when they differ — or there is no history.
+   */
+  testFireSuggestion: string | null;
 }
 
 /**
@@ -88,6 +95,8 @@ export async function getCloseContext(shiftId?: string): Promise<CloseContext> {
     expenseCategories: [],
     openingCash: '0.00',
     lastRate: null,
+    rateThreeDaysAgo: null,
+    testFireSuggestion: null,
   };
 
   if (!shiftRow) return empty;
@@ -102,7 +111,9 @@ export async function getCloseContext(shiftId?: string): Promise<CloseContext> {
     ratePerLitre: shiftRow.rate_per_litre ? dec(shiftRow.rate_per_litre).toFixed(2) : null,
   };
 
-  const [nozzleRes, tankRes, customerRes, skuRes, categoryRes, prevCashRes, lastRateRes] = await Promise.all([
+  const threeDaysBefore = new Date(new Date(shift.startsAt).getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [nozzleRes, tankRes, customerRes, skuRes, categoryRes, prevCashRes, lastRateRes, oldRateRes, recentTestRes] = await Promise.all([
     supabase
       .from('nozzles')
       .select('id, nozzle_no, status, dispensers!inner(id, code, status, deleted_at, meter_digits, max_flow_lpm, tank_id, tanks(code))')
@@ -146,6 +157,19 @@ export async function getCloseContext(shiftId?: string): Promise<CloseContext> {
       .order('shifts(starts_at)', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('shift_sales')
+      .select('rate_per_litre, shifts!inner(starts_at)')
+      .lte('shifts.starts_at', threeDaysBefore)
+      .order('shifts(starts_at)', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('shift_sales')
+      .select('test_litres, shifts!inner(starts_at)')
+      .lt('shifts.starts_at', shift.startsAt)
+      .order('shifts(starts_at)', { ascending: false })
+      .limit(5),
   ]);
 
   // ---- nozzles, each with the reading it follows ---------------------------
@@ -293,6 +317,16 @@ export async function getCloseContext(shiftId?: string): Promise<CloseContext> {
       }),
   );
 
+  // If the last five shifts all put the same quantity through every nozzle, offer
+  // it again so the manager confirms instead of typing.
+  let testFireSuggestion: string | null = null;
+  const recentTests = (recentTestRes.data ?? []) as Array<{ test_litres: string | number }>;
+  if (recentTests.length === 5 && nozzles.length > 0) {
+    const perNozzle = recentTests.map((r) => dec(r.test_litres).dividedBy(nozzles.length).toDecimalPlaces(3));
+    const first = perNozzle[0]!;
+    if (first.greaterThan(0) && perNozzle.every((v) => v.equals(first))) testFireSuggestion = first.toString();
+  }
+
   // A reopened shift: prefill its previous closing dips and cash count for editing.
   let editDips: Record<string, string> | null = null;
   let editCountedCash: string | null = null;
@@ -325,5 +359,7 @@ export async function getCloseContext(shiftId?: string): Promise<CloseContext> {
     // Shifts never inherit the previous shift's cash; it stays in the drawer.
     openingCash: '0.00',
     lastRate: lastRateRes.data?.rate_per_litre ? dec(lastRateRes.data.rate_per_litre).toFixed(2) : null,
+    rateThreeDaysAgo: oldRateRes.data?.rate_per_litre ? dec(oldRateRes.data.rate_per_litre).toFixed(2) : null,
+    testFireSuggestion,
   };
 }

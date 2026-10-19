@@ -309,7 +309,7 @@ export async function runReport(
         .from('shift_stock')
         .select(
           'book_opening, refill_litres, returned_litres, sold_from_tank, book_closing, physical_closing, ' +
-            'variance_litres, variance_pct, variance_reason, ' +
+            'variance_litres, variance_pct, variance_flagged, variance_reason, ' +
             'tanks!inner(code), shifts!inner(shift_date, shift_type, starts_at)',
         )
         .gte('shifts.shift_date', from)
@@ -331,6 +331,8 @@ export async function runReport(
           physical_closing: asLitres(v(r, 'physical_closing')),
           variance_litres: asLitres(v(r, 'variance_litres')),
           variance_pct: asPctOrNull(v(r, 'variance_pct')),
+          // 1 / 0 because every cell in a report row is a string, a number or null.
+          variance_flagged: String(v(r, 'variance_flagged')) === 'true' ? 1 : 0,
           variance_reason: text(r, 'variance_reason'),
         };
       });

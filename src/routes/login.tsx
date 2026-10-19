@@ -6,6 +6,7 @@ import { useLang } from "@/lib/i18n/provider";
 import { GlassCard, Muted } from "@/components/ui/glass";
 import { Button } from "@/components/jhm/button";
 import { LanguageToggle } from "@/components/language-toggle";
+import { FirstRunNotice } from "@/components/first-run-notice";
 import { getSessionProfile } from "@/lib/session";
 import { ROLE_HOME } from "@/lib/roles";
 
@@ -62,7 +63,8 @@ function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-10">
+      <FirstRunNotice />
       <GlassCard className="w-full max-w-sm p-6 sm:p-8" lift={false}>
         <div className="mb-6 flex items-start justify-between gap-3">
           <div>

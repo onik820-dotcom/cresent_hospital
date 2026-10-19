@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from '@/lib/compat';
 import { X } from 'lucide-react';
 import { useLang } from '@/lib/i18n/provider';
@@ -8,6 +8,7 @@ import { dec } from '@/lib/calc/decimal';
 import { Muted } from '@/components/ui/glass';
 import type { CreditParty } from '@/lib/data/money';
 import { saveParty } from '@/components/dues-actions';
+import { useThresholds } from '@/lib/data/thresholds';
 
 const INPUT = 'tabular tap-target w-full rounded-xl border bg-transparent px-3 py-2 text-sm outline-none';
 const BORDER = { borderColor: 'var(--hairline)' } as const;
@@ -29,7 +30,13 @@ export function PartyForm({ party, onClose }: { party: CreditParty | null; onClo
   );
   const [phone, setPhone] = useState(party?.phone ?? '');
   const [vehicles, setVehicles] = useState((party?.vehicleNumbers ?? []).join(', '));
+  const defaultLimit = useThresholds().maxCreditLimitDefault;
   const [limit, setLimit] = useState(party?.creditLimit ?? '0');
+  // A brand-new party starts at the admin's default limit, but only until it is typed over.
+  const [limitTouched, setLimitTouched] = useState(false);
+  useEffect(() => {
+    if (!party && !limitTouched) setLimit(String(defaultLimit));
+  }, [party, limitTouched, defaultLimit]);
   const [opening, setOpening] = useState(party?.openingBalance ?? '0');
   const [openingAsOf, setOpeningAsOf] = useState(party?.openingBalanceAsOf ?? '');
   const [active, setActive] = useState(party?.isActive ?? true);
@@ -136,7 +143,10 @@ export function PartyForm({ party, onClose }: { party: CreditParty | null; onClo
               <input
                 value={limit}
                 inputMode="decimal"
-                onChange={(e) => setLimit(e.target.value)}
+                onChange={(e) => {
+                  setLimitTouched(true);
+                  setLimit(e.target.value);
+                }}
                 className={INPUT}
                 style={BORDER}
               />

@@ -1,5 +1,8 @@
 'use client';
 import { AdminDelete } from '@/components/admin-delete';
+import { AdminEdit } from '@/components/admin-edit';
+import { EditedBadge } from '@/components/edited-badge';
+import { useEditors, type Editor } from '@/lib/data/audit';
 import { BankAccountSelect } from '@/components/bank-account-select';
 import type { BankAccount } from '@/lib/data/bank-names';
 
@@ -60,6 +63,9 @@ export function ExpensesScreen({
       ),
     [book.rows, which],
   );
+
+  // Pencil badge on lines the admin corrected after they were first saved.
+  const editors = useEditors('expenses', useMemo(() => rows.map((r) => r.id), [rows]));
 
   const periodLabels: Record<Period, string> = {
     day: lang === 'bn' ? 'আজ' : 'Day',
@@ -171,7 +177,7 @@ export function ExpensesScreen({
               <table className="w-full text-sm">
                 <tbody>
                   {rows.map((r) => (
-                    <ExpenseLine key={r.id} row={r} />
+                    <ExpenseLine key={r.id} row={r} editor={editors.get(r.id)} />
                   ))}
                 </tbody>
               </table>
@@ -196,7 +202,7 @@ export function ExpensesScreen({
   );
 }
 
-function ExpenseLine({ row }: { row: ExpenseRow }) {
+function ExpenseLine({ row, editor }: { row: ExpenseRow; editor?: Editor }) {
   const { t, lang } = useLang();
   return (
     <tr className="border-t" style={{ borderColor: 'var(--hairline)' }}>
@@ -205,6 +211,7 @@ function ExpenseLine({ row }: { row: ExpenseRow }) {
           <span className="font-medium">
             {lang === 'bn' && row.categoryNameBn ? row.categoryNameBn : row.categoryName}
           </span>
+          <EditedBadge editor={editor} />
           {row.isDerived ? (
             <span title={t('expenses.derivedHint')}>
               <Chip>
@@ -227,7 +234,11 @@ function ExpenseLine({ row }: { row: ExpenseRow }) {
         {formatDate(row.spentAt, lang)}
       </td>
       <td className="tabular px-2 py-2 text-right font-medium">{formatBDT(row.amount, lang)}</td>
-      <td className="w-8 px-1"><AdminDelete table="expenses" id={row.id} /></td>
+      <td className="w-16 whitespace-nowrap px-1">
+        {/* Derived lines are booked from lubricant movements; correct those there. */}
+        {row.isDerived ? null : <AdminEdit table="expenses" id={row.id} />}
+        <AdminDelete table="expenses" id={row.id} />
+      </td>
     </tr>
   );
 }

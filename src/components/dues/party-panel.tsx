@@ -4,6 +4,7 @@ import type { BankAccount } from '@/lib/data/bank-names';
 
 import { useEffect, useState } from 'react';
 import { AdminDelete, type DeletableTable } from '@/components/admin-delete';
+import { AdminEdit } from '@/components/admin-edit';
 import { useRouter } from '@/lib/compat';
 import { Pencil, X } from 'lucide-react';
 import { useLang } from '@/lib/i18n/provider';
@@ -231,6 +232,7 @@ function Statement({ lines }: { lines: StatementLine[] | null }) {
               <td className="px-2 py-1.5">
                 <Chip tone={l.entryType === 'payment' ? 'ok' : 'neutral'}>{l.entryType}</Chip>
                 {l.description ? <span className="ml-1.5">{l.description}</span> : null}
+                {l.sourceId && l.sourceTable === 'credit_sales' ? <AdminEdit table="credit_sales" id={l.sourceId} /> : null}
                 {l.sourceId && ['payments', 'credit_sales', 'lub_transactions'].includes(l.sourceTable ?? '') ? (
                   <AdminDelete table={l.sourceTable as DeletableTable} id={l.sourceId} />
                 ) : null}

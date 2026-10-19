@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from '@/lib/compat';
 import { ChevronLeft, CloudOff, LoaderCircle, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useLang } from '@/lib/i18n/provider';
@@ -8,6 +8,8 @@ import { formatNumber } from '@/lib/format';
 import { useSync } from '@/lib/offline/use-sync';
 import { Chip, Muted } from '@/components/ui/glass';
 import { LanguageToggle } from '@/components/language-toggle';
+import { getSessionProfile } from '@/lib/session';
+import { ROLE_HOME } from '@/lib/roles';
 
 /**
  * The shell every dispenser sub-screen sits in: a way back, the language
@@ -28,6 +30,15 @@ export function DispenserFrame({
   const { lang, t } = useLang();
   const sync = useSync(userId);
 
+  // A pump manager's home is the forecourt; a manager who dropped in from the
+  // dashboard's quick entry goes back to their own dashboard.
+  const [backHref, setBackHref] = useState('/dispenser');
+  useEffect(() => {
+    getSessionProfile().then((p) => {
+      if (p && p.role !== 'dispenser') setBackHref(ROLE_HOME[p.role]);
+    });
+  }, []);
+
   // A save bumps refreshKey so the queued count updates immediately rather
   // than waiting for the next poll. It must not be used as a React key here —
   // that would remount the children and throw away the confirmation screen.
@@ -40,7 +51,7 @@ export function DispenserFrame({
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-4">
       <header className="mb-4 flex items-center gap-2">
         <Link
-          href="/dispenser"
+          href={backHref}
           className="tap-target -ml-2 flex items-center rounded-xl px-2 py-2"
           aria-label={lang === 'bn' ? 'পিছনে' : 'Back'}
         >

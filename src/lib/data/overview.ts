@@ -224,3 +224,176 @@ async function latestClosedDip(supabase: any, tankId: string, cols: string) {
     .limit(1)
     .maybeSingle();
 }
+
+export interface ShiftStatusInfo {
+  /** When the shift row was opened (not the scheduled start). */
+  openedAt: string | null;
+  openedBy: { name: string; nameBn: string | null } | null;
+}
+
+/** Who opened a shift, and when. The scheduled window comes from CurrentShift. */
+export async function getShiftStatusInfo(shiftId: string): Promise<ShiftStatusInfo> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('shifts')
+    .select('created_at, opener:profiles!shifts_opened_by_fkey(full_name, full_name_bn)')
+    .eq('id', shiftId)
+    .maybeSingle();
+  const row = data as unknown as {
+    created_at: string | null;
+    opener: { full_name: string; full_name_bn: string | null } | null;
+  } | null;
+  return {
+    openedAt: row?.created_at ?? null,
+    openedBy: row?.opener ? { name: row.opener.full_name, nameBn: row.opener.full_name_bn } : null,
+  };
+}
+
+export type ActivityKind = 'meter' | 'dip' | 'expense' | 'due' | 'lubricant' | 'credit';
+
+export interface ActivityEntry {
+  id: string;
+  kind: ActivityKind;
+  at: string;
+  /** A short description already worded for the screen, English. */
+  label: string;
+  labelBn: string;
+  /** Money, when the entry carries any. */
+  amount: string | null;
+}
+
+/**
+ * Everything entered against one shift so far, newest first. Each source is
+ * read from its own table, the same rows the close works from, so the log can
+ * never show something the close would not count.
+ */
+export async function getShiftActivity(shiftId: string, limit = 40): Promise<ActivityEntry[]> {
+  const supabase = await createClient();
+  const each = 20;
+
+  const [meters, dips, expenses, dues, lubs, credits] = await Promise.all([
+    supabase
+      .from('meter_readings')
+      .select('id, created_at, reading, reading_type, nozzles(nozzle_no, dispensers(code))')
+      .eq('shift_id', shiftId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(each),
+    supabase
+      .from('tank_dips')
+      .select('id, recorded_at, dip_mm, dip_type, tanks(code)')
+      .eq('shift_id', shiftId)
+      .is('deleted_at', null)
+      .order('recorded_at', { ascending: false })
+      .limit(each),
+    supabase
+      .from('expenses')
+      .select('id, spent_at, amount, description, expense_categories(name, name_bn)')
+      .eq('shift_id', shiftId)
+      .is('deleted_at', null)
+      .order('spent_at', { ascending: false })
+      .limit(each),
+    supabase
+      .from('payments')
+      .select('id, received_at, amount, customers(name, name_bn)')
+      .eq('shift_id', shiftId)
+      .is('deleted_at', null)
+      .order('received_at', { ascending: false })
+      .limit(each),
+    supabase
+      .from('lub_transactions')
+      .select('id, txn_at, amount, txn_type, lub_skus(name, name_bn)')
+      .eq('shift_id', shiftId)
+      .eq('txn_type', 'sale')
+      .is('deleted_at', null)
+      .order('txn_at', { ascending: false })
+      .limit(each),
+    supabase
+      .from('credit_sales')
+      .select('id, sold_at, amount, customers(name, name_bn)')
+      .eq('shift_id', shiftId)
+      .is('deleted_at', null)
+      .order('sold_at', { ascending: false })
+      .limit(each),
+  ]);
+
+  const rows = <T,>(r: { data: unknown }) => ((r.data ?? []) as T[]);
+  const entries: ActivityEntry[] = [];
+
+  for (const m of rows<{
+    id: string;
+    created_at: string;
+    reading: number | string;
+    reading_type: string;
+    nozzles: { nozzle_no: number; dispensers: { code: string } | null } | null;
+  }>(meters)) {
+    const where = `${m.nozzles?.dispensers?.code ?? '—'}${(m.nozzles?.nozzle_no ?? 1) > 1 ? `·${m.nozzles?.nozzle_no}` : ''}`;
+    const open = m.reading_type === 'open';
+    entries.push({
+      id: m.id,
+      kind: 'meter',
+      at: m.created_at,
+      label: `${open ? 'Opening' : 'Closing'} meter ${where}: ${m.reading}`,
+      labelBn: `${open ? 'শুরুর' : 'শেষের'} মিটার ${where}: ${m.reading}`,
+      amount: null,
+    });
+  }
+  for (const d of rows<{ id: string; recorded_at: string; dip_mm: number | string; dip_type: string; tanks: { code: string } | null }>(dips)) {
+    entries.push({
+      id: d.id,
+      kind: 'dip',
+      at: d.recorded_at,
+      label: `Dip ${d.tanks?.code ?? ''} (${d.dip_type}): ${d.dip_mm} mm`,
+      labelBn: `ডিপ ${d.tanks?.code ?? ''} (${d.dip_type}): ${d.dip_mm} মিমি`,
+      amount: null,
+    });
+  }
+  for (const e of rows<{
+    id: string;
+    spent_at: string;
+    amount: number | string;
+    description: string | null;
+    expense_categories: { name: string; name_bn: string | null } | null;
+  }>(expenses)) {
+    entries.push({
+      id: e.id,
+      kind: 'expense',
+      at: e.spent_at,
+      label: `Expense · ${e.expense_categories?.name ?? ''}${e.description ? ` — ${e.description}` : ''}`,
+      labelBn: `খরচ · ${e.expense_categories?.name_bn ?? e.expense_categories?.name ?? ''}${e.description ? ` — ${e.description}` : ''}`,
+      amount: String(e.amount),
+    });
+  }
+  for (const p of rows<{ id: string; received_at: string; amount: number | string; customers: { name: string; name_bn: string | null } | null }>(dues)) {
+    entries.push({
+      id: p.id,
+      kind: 'due',
+      at: p.received_at,
+      label: `Due collected · ${p.customers?.name ?? ''}`,
+      labelBn: `বাকি আদায় · ${p.customers?.name_bn ?? p.customers?.name ?? ''}`,
+      amount: String(p.amount),
+    });
+  }
+  for (const l of rows<{ id: string; txn_at: string; amount: number | string; lub_skus: { name: string; name_bn: string | null } | null }>(lubs)) {
+    entries.push({
+      id: l.id,
+      kind: 'lubricant',
+      at: l.txn_at,
+      label: `Lubricant sale · ${l.lub_skus?.name ?? ''}`,
+      labelBn: `লুব্রিক্যান্ট বিক্রি · ${l.lub_skus?.name_bn ?? l.lub_skus?.name ?? ''}`,
+      amount: String(l.amount),
+    });
+  }
+  for (const c of rows<{ id: string; sold_at: string; amount: number | string; customers: { name: string; name_bn: string | null } | null }>(credits)) {
+    entries.push({
+      id: c.id,
+      kind: 'credit',
+      at: c.sold_at,
+      label: `Credit sale · ${c.customers?.name ?? ''}`,
+      labelBn: `বাকি বিক্রি · ${c.customers?.name_bn ?? c.customers?.name ?? ''}`,
+      amount: String(c.amount),
+    });
+  }
+
+  return entries.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).slice(0, limit);
+}

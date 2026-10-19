@@ -2,11 +2,19 @@
 
 import { useLang } from '@/lib/i18n/provider';
 import { EmptyState, GlassCard } from '@/components/ui/glass';
-import { CloseWizard } from '@/components/shift/close-wizard';
+import { CloseWizard, type ClosedInfo } from '@/components/shift/close-wizard';
 import { ClosedShiftsList } from '@/components/shift/closed-shifts-list';
 import type { CloseContext } from '@/lib/data/shift-close';
 
-export function CloseScreen({ context }: { context: CloseContext }) {
+export function CloseScreen({
+  context,
+  initialStep = 0,
+  onClosed,
+}: {
+  context: CloseContext;
+  initialStep?: number;
+  onClosed: (info: ClosedInfo) => void;
+}) {
   const { t, lang } = useLang();
   const shift = context.shift;
   const editable = shift && ['open', 'closing', 'reopened'].includes(shift.status);
@@ -23,7 +31,7 @@ export function CloseScreen({ context }: { context: CloseContext }) {
         </GlassCard>
       ) : null}
       {editable ? (
-        <CloseWizard context={context} />
+        <CloseWizard context={context} initialStep={initialStep} onClosed={onClosed} />
       ) : (
         <GlassCard lift={false}>
           <EmptyState

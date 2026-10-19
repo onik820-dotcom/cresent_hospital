@@ -66,14 +66,108 @@ export interface DailySheetData extends Json {
   shift_in_charge?: string[];
 }
 
+/**
+ * The Daily Sheet, in two shapes of the same data.
+ *
+ * On a phone the paper form is unreadable — nine columns of figures in a
+ * 390 px window — so under 768 px a short read-only card is shown instead. Both
+ * are always in the page and CSS picks one, which also means printing from a
+ * phone still produces the full paper form: print rules hide the card and show
+ * the form whatever the screen size.
+ *
+ * The headings and signature captions on the form come from Settings → Report
+ * labels. Whether they have been checked against the printed form is the
+ * admin's business and is settled there, not announced on every report.
+ */
 export function DailySheet({ sheet }: { sheet: DailySheetData }) {
+  return (
+    <>
+      <div className="sheet-mobile md:hidden">
+        <MobileSheet sheet={sheet} />
+      </div>
+      <div className="sheet-paper hidden md:block">
+        <PaperSheet sheet={sheet} />
+      </div>
+    </>
+  );
+}
+
+function MobileSheet({ sheet }: { sheet: DailySheetData }) {
+  const { lang } = useLang();
+  const bn = lang === 'bn';
+  const s = (sheet.sales ?? {}) as Record<string, number | string>;
+  const expenseTotal = sheet.expenses.reduce((a, e) => a.plus(dec(String(e.amount ?? 0))), dec(0)).toFixed(2);
+  const counted = tot(sheet.cash, 'counted_cash');
+  const variance = tot(sheet.cash, 'cash_variance');
+
+  const Row = ({ label, value, strong }: { label: string; value: string; strong?: boolean }) => (
+    <div className="flex items-baseline justify-between gap-3 border-t py-2 text-sm first:border-t-0" style={{ borderColor: 'var(--hairline)' }}>
+      <span style={{ color: 'var(--text-muted)' }} lang={lang}>{label}</span>
+      <span className={`tabular ${strong ? 'text-base font-semibold' : 'font-medium'}`}>{value}</span>
+    </div>
+  );
+
+  return (
+    <div className="space-y-3">
+      <header>
+        <h2 className="text-base font-semibold tracking-tight" lang={lang}>
+          {bn ? 'দৈনিক বিবরণী' : 'Daily sheet'}
+        </h2>
+        <p className="tabular text-xs" style={{ color: 'var(--text-muted)' }}>
+          {formatDate(sheet.date, lang)}
+          {sheet.shift_count > 0 ? ` · ${formatNumber(sheet.shift_count, { lang })} ${bn ? 'শিফট' : sheet.shift_count === 1 ? 'shift' : 'shifts'}` : ''}
+        </p>
+      </header>
+
+      {sheet.shift_count === 0 ? (
+        <p className="py-6 text-center text-sm" lang={lang}>
+          {bn ? 'এই তারিখে কোনো শিফট বন্ধ হয়নি।' : 'No shift was closed on this date.'}
+        </p>
+      ) : (
+        <>
+          <div>
+            <Row label={bn ? 'নিট লিটার' : 'Net litres'} value={formatLitres(String(s.net_litres ?? 0), lang)} />
+            <Row label={bn ? 'জ্বালানি বিক্রি' : 'Fuel sales'} value={formatBDT(s.fuel_amount as number, lang)} />
+            <Row label={bn ? 'লুব্রিকেন্ট বিক্রি' : 'Lubricant sales'} value={formatBDT(s.lubricant_amount as number, lang)} />
+            <Row label={bn ? 'মোট বিক্রি' : 'Total sales'} value={formatBDT(s.total_amount as number, lang)} strong />
+            <Row label={bn ? 'বাকি বিক্রি' : 'Credit sales'} value={formatBDT(s.credit_sales as number, lang)} />
+            <Row label={bn ? 'নগদ বিক্রি' : 'Cash sales'} value={formatBDT(s.cash_sales as number, lang)} strong />
+          </div>
+          <div>
+            <Row label={bn ? 'মোট খরচ' : 'Expenses'} value={formatBDT(expenseTotal, lang)} />
+            <Row label={bn ? 'গোনা নগদ' : 'Cash counted'} value={formatBDT(counted, lang)} />
+            <Row label={bn ? 'নগদ গরমিল' : 'Cash variance'} value={formatBDT(variance, lang, true)} strong />
+          </div>
+          {sheet.tanks.length > 0 ? (
+            <div>
+              {sheet.tanks.map((tk, i) => (
+                <Row
+                  key={i}
+                  label={`${bn ? 'ট্যাংক' : 'Tank'} ${String(tk.tank_code ?? '')} · ${tk.shift_type === 'night' ? (bn ? 'রাত' : 'Night') : bn ? 'দিন' : 'Day'} · ${bn ? 'শেষ মজুদ' : 'closing'}`}
+                  value={formatLitres(String(tk.physical_closing ?? tk.book_closing ?? 0), lang)}
+                />
+              ))}
+            </div>
+          ) : null}
+        </>
+      )}
+
+      <p className="text-xs" style={{ color: 'var(--text-faint)' }} lang={lang}>
+        {bn
+          ? 'সংক্ষিপ্ত দেখা। পূর্ণ ফর্ম দেখতে বা ছাপতে বড় পর্দায় খুলুন, অথবা ছাপুন — ছাপা কপিতে পূর্ণ ফর্মই আসে।'
+          : 'A short read-only view. Open on a larger screen for the full form — printing always produces the full form.'}
+      </p>
+    </div>
+  );
+}
+
+function PaperSheet({ sheet }: { sheet: DailySheetData }) {
   const { lang } = useLang();
   const L = (b?: Bilingual, fallback = '') => (b ? (lang === 'bn' ? (b.bn ?? b.en) : (b.en ?? b.bn)) ?? fallback : fallback);
 
   const labels = sheet.labels ?? {};
   const signatureLines = labels.signature_lines ?? [];
   const signedBy = sheet.signed_by ?? [];
-  const confirmed = labels.confirmed === true;
 
   const s = (sheet.sales ?? {}) as Record<string, number | string>;
   const shiftLabel = (type: unknown) =>
@@ -85,19 +179,6 @@ export function DailySheet({ sheet }: { sheet: DailySheetData }) {
 
   return (
     <div className="print-sheet space-y-4 text-sm">
-      {/* ---- the caption warning, on screen and on paper ---- */}
-      {!confirmed ? (
-        <div
-          className="print-block rounded-lg border px-3 py-2 text-xs"
-          style={{ borderColor: 'var(--color-watch)', color: 'var(--color-watch)' }}
-          lang={lang}
-        >
-          {lang === 'bn'
-            ? 'এই ফরমের সব সংখ্যা হিসাব করা ও নিশ্চিত। কিন্তু শিরোনাম ও পাঁচটি স্বাক্ষরের নাম কাগজের আসল ফরমের সঙ্গে মিলিয়ে দেখা হয়নি — অ্যাডমিন সেটিংসে মিলিয়ে নিশ্চিত করুন।'
-            : 'Every figure on this sheet is computed and certain. The headings and the five signature captions have not been checked against the paper form — an admin can correct them in settings, and this notice disappears once they are confirmed.'}
-        </div>
-      ) : null}
-
       {/* ---- masthead ---- */}
       <header className="print-block text-center">
         <h1 className="text-base font-bold tracking-tight">

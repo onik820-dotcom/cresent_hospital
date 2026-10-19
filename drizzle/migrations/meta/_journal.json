@@ -568,6 +568,27 @@
       "when": 1791634160932,
       "tag": "0080_first_run_and_calculation_thresholds",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1791720560932,
+      "tag": "0081_avco_rounding_from_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1791806960932,
+      "tag": "0082_admin_edit_record",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1791893360932,
+      "tag": "0083_recalculate_after_admin_changes",
+      "breakpoints": true
     }
   ]
 }

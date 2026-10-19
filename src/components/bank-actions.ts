@@ -137,8 +137,15 @@ export async function updateBankTxn(
   if (input.txn_date?.trim()) patch.txn_date = input.txn_date.trim();
   if (input.bank_name?.trim()) patch.bank_name = input.bank_name.trim();
   if (input.account_no !== undefined) patch.account_no = input.account_no.trim() || null;
+  const { data: before } = await supabase.from('bank_transactions').select('shift_id').eq('id', id).maybeSingle();
   const { error } = await supabase.from('bank_transactions').update(patch as never).eq('id', id);
-  return error ? { ok: false, error: error.message } : { ok: true };
+  if (error) return { ok: false, error: error.message };
+  // A line taken out of a closed shift's drawer changes that shift's cash.
+  if (before?.shift_id) {
+    const { error: recalcError } = await supabase.rpc('recalculate_shift_if_closed', { p_shift_id: before.shift_id });
+    if (recalcError) return { ok: false, error: `Saved, but the shift could not be recalculated: ${recalcError.message}` };
+  }
+  return { ok: true };
 }
 
 /** Owner only: remove a bank line (kept hidden in history, never erased). */
@@ -147,9 +154,15 @@ export async function deleteBankTxn(id: string, reason: string): Promise<BankDep
   if (profile?.role !== 'admin') return { ok: false, error: 'Only the owner may delete a saved record' };
   if (!reason.trim()) return { ok: false, error: 'Enter a reason' };
   const supabase = await createClient();
+  const { data: before } = await supabase.from('bank_transactions').select('shift_id').eq('id', id).maybeSingle();
   const { error } = await supabase
     .from('bank_transactions')
     .update({ deleted_at: new Date().toISOString(), deleted_by: profile.id, delete_reason: reason.trim() })
     .eq('id', id);
-  return error ? { ok: false, error: error.message } : { ok: true };
+  if (error) return { ok: false, error: error.message };
+  if (before?.shift_id) {
+    const { error: recalcError } = await supabase.rpc('recalculate_shift_if_closed', { p_shift_id: before.shift_id });
+    if (recalcError) return { ok: false, error: `Deleted, but the shift could not be recalculated: ${recalcError.message}` };
+  }
+  return { ok: true };
 }

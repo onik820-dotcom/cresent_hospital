@@ -1,7 +1,32 @@
 'use client';
 
-import { formatDate, formatLitres } from '@/lib/format';
+import { formatDate, formatLitres, formatPercent } from '@/lib/format';
+import { stockLight, useThresholds, type Thresholds, type TrafficLight } from '@/lib/data/thresholds';
 import type { ReportRow } from '@/lib/reports/run';
+
+const LIGHT_STYLE: Record<TrafficLight, { dot: string; cls: string }> = {
+  green: { dot: '●', cls: 'state-ok' },
+  yellow: { dot: '●', cls: 'state-watch' },
+  red: { dot: '●', cls: 'state-breach' },
+};
+
+/**
+ * Green / yellow / red, from the limits on Settings → Calculation thresholds.
+ * Red follows the database's own verdict (it knows the litre floor); yellow is
+ * the warning band below it.
+ */
+function Light({ row, t, lang }: { row: ReportRow; t: Thresholds; lang: 'bn' | 'en' }) {
+  const light = stockLight(row.variance_pct as string | null, Number(row.variance_flagged) === 1, t, row.variance_litres as string | null);
+  const style = LIGHT_STYLE[light];
+  const label = { green: lang === 'bn' ? 'সবুজ' : 'Green', yellow: lang === 'bn' ? 'হলুদ' : 'Yellow', red: lang === 'bn' ? 'লাল' : 'Red' }[light];
+  return (
+    <span className={`inline-flex items-center gap-1 whitespace-nowrap font-semibold ${style.cls}`} title={label}>
+      <span aria-hidden>{style.dot}</span>
+      <span className="sr-only">{label}</span>
+      {row.variance_pct === null || row.variance_pct === undefined ? '—' : formatPercent(String(row.variance_pct), lang)}
+    </span>
+  );
+}
 
 /**
  * Tank stock & variance, one card per shift so each closing reads on its own.
@@ -9,6 +34,7 @@ import type { ReportRow } from '@/lib/reports/run';
  */
 export function StockVarianceView({ rows, lang }: { rows: ReportRow[]; lang: 'bn' | 'en' }) {
   const bn = lang === 'bn';
+  const thresholds = useThresholds();
   const groups: { key: string; date: string; shift: string; rows: ReportRow[] }[] = [];
   for (const row of rows) {
     const key = `${row.shift_date}|${row.shift_type}`;
@@ -24,8 +50,8 @@ export function StockVarianceView({ rows, lang }: { rows: ReportRow[]; lang: 'bn
   const num = (v: unknown) => Number(v) || 0;
 
   const head = bn
-    ? ['ট্যাংক', 'শুরুতে ছিল', '+ রিফিল', '− ফেরত', '− বিক্রি', 'থাকার কথা', 'ডিপে মাপা', 'ফলাফল', 'কারণ']
-    : ['Tank', 'Opening', '+ Received', '− Returned', '− Sold', 'Should be', 'Measured', 'Result', 'Reason'];
+    ? ['ট্যাংক', 'শুরুতে ছিল', '+ রিফিল', '− ফেরত', '− বিক্রি', 'থাকার কথা', 'ডিপে মাপা', 'ফলাফল', 'গরমিল %', 'কারণ']
+    : ['Tank', 'Opening', '+ Received', '− Returned', '− Sold', 'Should be', 'Measured', 'Result', 'Variance %', 'Reason'];
 
   return (
     <div className="space-y-5">
@@ -45,7 +71,7 @@ export function StockVarianceView({ rows, lang }: { rows: ReportRow[]; lang: 'bn
                 <thead>
                   <tr style={{ color: 'var(--text-faint)' }}>
                     {head.map((h, i) => (
-                      <th key={h} className={`border-b px-2 py-1.5 font-medium ${i === 0 || i === 8 ? 'text-left' : 'text-right'}`} style={{ borderColor: 'var(--hairline)' }} lang={lang}>
+                      <th key={h} className={`border-b px-2 py-1.5 font-medium ${i === 0 || i === 9 ? 'text-left' : 'text-right'}`} style={{ borderColor: 'var(--hairline)' }} lang={lang}>
                         {h}
                       </th>
                     ))}
@@ -62,6 +88,7 @@ export function StockVarianceView({ rows, lang }: { rows: ReportRow[]; lang: 'bn
                       <td className="tabular px-2 py-1.5 text-right">{L(r.book_closing)}</td>
                       <td className="tabular px-2 py-1.5 text-right font-medium">{L(r.physical_closing)}</td>
                       <td className="tabular px-2 py-1.5 text-right"><Result value={num(r.variance_litres)} lang={lang} /></td>
+                      <td className="tabular px-2 py-1.5 text-right"><Light row={r} t={thresholds} lang={lang} /></td>
                       <td className="px-2 py-1.5" style={{ color: 'var(--text-muted)' }}>{r.variance_reason ? String(r.variance_reason) : ''}</td>
                     </tr>
                   ))}
@@ -75,6 +102,14 @@ export function StockVarianceView({ rows, lang }: { rows: ReportRow[]; lang: 'bn
         {bn
           ? 'থাকার কথা = শুরুতে ছিল + রিফিল − ফেরত − বিক্রি। ফলাফল = ডিপে মাপা − থাকার কথা।'
           : 'Should be = Opening + Received − Returned − Sold. Result = Measured − Should be.'}
+      </p>
+      <p className="text-xs" style={{ color: 'var(--text-faint)' }} lang={lang}>
+        <span className="state-ok">●</span> {bn ? 'সবুজ' : 'Green'} &lt; {thresholds.stockVarianceWarnPct}% ·{' '}
+        <span className="state-watch">●</span> {bn ? 'হলুদ' : 'Yellow'} {thresholds.stockVarianceWarnPct}–{thresholds.stockVarianceAlertPct}% ·{' '}
+        <span className="state-breach">●</span> {bn ? 'লাল' : 'Red'} &gt; {thresholds.stockVarianceAlertPct}%{' '}
+        {bn
+          ? `(বিক্রির শতাংশ; ${thresholds.varianceFloorLitres} লিটার পর্যন্ত গরমিল গণ্য নয় — সেটিংসে বদলানো যায়)`
+          : `(of litres sold; gaps up to ${thresholds.varianceFloorLitres} L are ignored — set in Settings)`}
       </p>
     </div>
   );

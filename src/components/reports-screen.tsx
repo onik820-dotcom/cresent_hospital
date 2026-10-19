@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from '@/lib/compat'; import { useSearch } from '@tanstack/react-router';
-import { Download, Printer } from 'lucide-react';
+import { Download, FileDown, Printer } from 'lucide-react';
 import { useLang } from '@/lib/i18n/provider';
 import { formatBDT, formatDate, formatDateTime, formatLitres, formatNumber, formatPercent } from '@/lib/format';
 import { EmptyState, GlassCard, Muted } from '@/components/ui/glass';
@@ -138,44 +138,75 @@ export function ReportsScreen({
               </button>
             ) : null}
 
+            {/* Both open the browser's print dialog, which is also how a PDF is made:
+                the buttons differ so each is found where it is looked for. Everything
+                outside the report itself is hidden by the print rules. */}
             <button
               type="button"
               onClick={() => window.print()}
+              className="tap-target flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium"
+              style={{ borderColor: 'var(--hairline)' }}
+              lang={lang}
+            >
+              <Printer className="h-3.5 w-3.5" aria-hidden />
+              {lang === 'bn' ? 'প্রিন্ট' : 'Print'}
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              title={lang === 'bn' ? 'প্রিন্টারের জায়গায় “Save as PDF” বাছুন' : 'In the print window, choose “Save as PDF” as the printer'}
               className="tap-target flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium"
               style={{ background: 'var(--color-accent)', color: 'white' }}
               lang={lang}
             >
-              <Printer className="h-3.5 w-3.5" aria-hidden />
-              PDF
+              <FileDown className="h-3.5 w-3.5" aria-hidden />
+              {lang === 'bn' ? 'PDF এক্সপোর্ট' : 'Export PDF'}
             </button>
           </div>
         </div>
 
         {/* Quick ranges, because a month is the question people actually ask. */}
         {period === 'range' ? (
-          <div className="flex flex-wrap gap-1">
-            {(
-              [
+          <div className="flex flex-wrap items-center gap-1" role="group" aria-label={lang === 'bn' ? 'সময়কাল' : 'Period'}>
+            {(() => {
+              const prev = previousMonth(to);
+              const presets = [
                 [lang === 'bn' ? 'আজ' : 'Today', to, to],
                 [lang === 'bn' ? 'এ মাস' : 'This month', `${to.slice(0, 7)}-01`, to],
+                [lang === 'bn' ? 'গত মাস' : 'Last month', prev.from, prev.to],
                 [lang === 'bn' ? 'এ বছর' : 'This year', `${to.slice(0, 4)}-01-01`, to],
-              ] as const
-            ).map(([label, f, t2]) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => go({ from: f, to: t2 })}
-                className="tap-target rounded-lg px-2.5 py-1 text-[11px] font-medium"
-                style={
-                  from === f
-                    ? { background: 'var(--color-accent-soft)', color: 'var(--color-accent)' }
-                    : { color: 'var(--text-faint)' }
-                }
-                lang={lang}
-              >
-                {label}
-              </button>
-            ))}
+              ] as const;
+              const matched = presets.some(([, f, t2]) => from === f && to === t2);
+              return (
+                <>
+                  {presets.map(([label, f, t2]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => go({ from: f, to: t2 })}
+                      aria-pressed={from === f && to === t2}
+                      className="tap-target rounded-lg px-2.5 py-1 text-[11px] font-medium"
+                      style={
+                        from === f && to === t2
+                          ? { background: 'var(--color-accent-soft)', color: 'var(--color-accent)' }
+                          : { color: 'var(--text-faint)' }
+                      }
+                      lang={lang}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  {/* Any other pair of dates, picked above, is a custom range. */}
+                  <span
+                    className="rounded-lg px-2.5 py-1 text-[11px] font-medium"
+                    style={!matched ? { background: 'var(--color-accent-soft)', color: 'var(--color-accent)' } : { color: 'var(--text-faint)' }}
+                    lang={lang}
+                  >
+                    {lang === 'bn' ? 'নিজের তারিখ' : 'Custom range'}
+                  </span>
+                </>
+              );
+            })()}
           </div>
         ) : null}
 
@@ -320,6 +351,17 @@ export function ReportsScreen({
       </GlassCard>
     </div>
   );
+}
+
+/** First and last day of the month before the one `day` (YYYY-MM-DD) falls in. */
+function previousMonth(day: string): { from: string; to: string } {
+  const year = Number(day.slice(0, 4));
+  const month = Number(day.slice(5, 7)); // 1-12
+  const prevYear = month === 1 ? year - 1 : year;
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const last = new Date(Date.UTC(prevYear, prevMonth, 0)).getUTCDate();
+  const mm = String(prevMonth).padStart(2, '0');
+  return { from: `${prevYear}-${mm}-01`, to: `${prevYear}-${mm}-${String(last).padStart(2, '0')}` };
 }
 
 function isNumeric(c: ReportColumn) {

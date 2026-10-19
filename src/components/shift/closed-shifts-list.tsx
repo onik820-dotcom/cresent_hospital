@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { Pencil } from 'lucide-react';
+import { ListTree, Pencil } from 'lucide-react';
 import { useLang } from '@/lib/i18n/provider';
 import { formatBDT, formatDate, formatLitres } from '@/lib/format';
 import { Button } from '@/components/jhm/button';
@@ -10,6 +10,7 @@ import { GlassCard, Muted } from '@/components/ui/glass';
 import { getSessionProfile } from '@/lib/session';
 import { listClosedShifts, reopenShift, type ClosedShiftRow } from '@/components/shift-close-actions';
 import { useRefreshKey } from '@/lib/refresh';
+import { ShiftDetail } from '@/components/shift/shift-detail';
 
 /** Recently closed shifts; the owner/admin can open one again to correct it. */
 export function ClosedShiftsList() {
@@ -21,6 +22,7 @@ export function ClosedShiftsList() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [detail, setDetail] = useState<string | null>(null);
 
   useEffect(() => {
     listClosedShifts().then(setRows);
@@ -60,7 +62,7 @@ export function ClosedShiftsList() {
               <th className="py-2 pr-3 text-right">{bn ? 'বিক্রি (লি.)' : 'Sold (L)'}</th>
               <th className="py-2 pr-3 text-right">{bn ? 'বিক্রি (৳)' : 'Sales'}</th>
               <th className="py-2 pr-3 text-right">{bn ? 'গণনা করা নগদ' : 'Cash counted'}</th>
-              {isAdmin ? <th className="py-2" /> : null}
+              <th className="py-2" />
             </tr>
           </thead>
           <tbody>
@@ -71,18 +73,22 @@ export function ClosedShiftsList() {
                 <td className="py-2 pr-3 text-right">{r.netLitres != null ? formatLitres(r.netLitres, lang) : '—'}</td>
                 <td className="py-2 pr-3 text-right">{r.salesAmount != null ? formatBDT(r.salesAmount, lang) : '—'}</td>
                 <td className="py-2 pr-3 text-right">{r.countedCash != null ? formatBDT(r.countedCash, lang) : '—'}</td>
-                {isAdmin ? (
-                  <td className="py-2 text-right">
+                <td className="space-x-1 whitespace-nowrap py-2 text-right">
+                  <Button size="sm" variant="ghost" onClick={() => setDetail(r.id)} lang={lang}>
+                    <ListTree className="h-4 w-4" aria-hidden /> {bn ? 'বিবরণ' : 'Details'}
+                  </Button>
+                  {isAdmin ? (
                     <Button size="sm" variant="secondary" disabled={busy === r.id} onClick={() => edit(r)}>
                       <Pencil className="h-4 w-4" aria-hidden /> {bn ? 'সংশোধন' : 'Edit'}
                     </Button>
-                  </td>
-                ) : null}
+                  ) : null}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {detail ? <ShiftDetail shiftId={detail} onClose={() => setDetail(null)} /> : null}
     </GlassCard>
   );
 }

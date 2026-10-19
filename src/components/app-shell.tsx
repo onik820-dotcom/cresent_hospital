@@ -1,40 +1,15 @@
+import { useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Fuel, LogOut, Settings } from "lucide-react";
+import { Fuel, LayoutDashboard, LogOut, Menu, Settings, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/lib/i18n/provider";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/roles";
+import { BUCKET_LABEL, activeBucket, isActivePath, navFor, type NavGroup, type NavItem } from "@/lib/nav";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Chip } from "@/components/ui/glass";
-
-interface NavItem {
-  href: string;
-  key: TranslationKey;
-  roles: Role[];
-}
-
-const NAV: NavItem[] = [
-  { href: "/manager", key: "nav.dashboard", roles: ["manager"] },
-  { href: "/admin", key: "nav.dashboard", roles: ["admin"] },
-  { href: "/md", key: "nav.dashboard", roles: ["md"] },
-  { href: "/accounts", key: "nav.dashboard", roles: ["accountant"] },
-  { href: "/chat", key: "nav.chat", roles: ["admin", "md"] },
-  { href: "/stock", key: "nav.stock", roles: ["manager", "admin"] },
-  { href: "/shift/close", key: "nav.shiftClose", roles: ["manager", "admin"] },
-  { href: "/oil-purchase", key: "nav.oilPurchase", roles: ["manager", "admin"] },
-  { href: "/refill", key: "nav.refill", roles: ["manager", "admin"] },
-  { href: "/cash", key: "nav.cash", roles: ["admin", "accountant"] },
-  { href: "/bank-deposits", key: "nav.bankDeposits", roles: ["admin", "accountant"] },
-  { href: "/dues", key: "nav.dues", roles: ["admin", "accountant"] },
-  { href: "/expenses", key: "nav.expenses", roles: ["admin", "accountant"] },
-  { href: "/petty-cash", key: "nav.pettyCash", roles: ["admin", "accountant"] },
-  { href: "/lubricants", key: "nav.lubricants", roles: ["admin"] },
-  { href: "/reports", key: "nav.reports", roles: ["admin", "md"] },
-  { href: "/people", key: "nav.people", roles: ["admin"] },
-  { href: "/settings", key: "nav.settings", roles: ["admin"] },
-  { href: "/account", key: "nav.account", roles: ["dispenser", "manager", "admin", "md", "accountant"] },
-];
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const ROLE_LABEL: Record<Role, TranslationKey> = {
   dispenser: "role.dispenser",
@@ -56,7 +31,10 @@ export function AppShell({
   const { t, lang } = useLang();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const items = NAV.filter((item) => item.roles.includes(role));
+  const nav = navFor(role);
+  const currentBucket = activeBucket(nav, pathname);
+  const hasNav = nav.groups.length > 0;
+  const [openBucket, setOpenBucket] = useState<NavGroup | null>(null);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -87,12 +65,21 @@ export function AppShell({
           <div className="ml-auto flex items-center gap-2">
             <Chip lang={lang}>{t(ROLE_LABEL[role])}</Chip>
             <LanguageToggle />
+            <Link
+              to="/account"
+              aria-label={t("nav.account")}
+              title={t("nav.account")}
+              className="tap-target inline-flex items-center justify-center rounded-xl px-2.5 py-2"
+              style={{ color: isActivePath(pathname, "/account") ? "var(--color-accent)" : "var(--text-muted)" }}
+            >
+              <UserRound className="h-4 w-4" aria-hidden />
+            </Link>
             {role === "admin" ? (
               <Link
                 to="/settings"
                 aria-label={t("nav.settings")}
                 title={t("nav.settings")}
-                className="tap-target inline-flex items-center justify-center rounded-xl px-2.5 py-2"
+                className="tap-target hidden items-center justify-center rounded-xl px-2.5 py-2 sm:inline-flex"
                 style={{
                   color: pathname === "/settings" ? "var(--color-accent)" : "var(--text-muted)",
                 }}
@@ -111,32 +98,137 @@ export function AppShell({
               <span className="hidden sm:inline">{t("auth.signOut")}</span>
             </button>
           </div>
-
-          {items.length > 1 ? (
-            <nav className="-mx-1 flex w-full gap-1 overflow-x-auto pb-0.5" aria-label="Sections">
-              {items.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    lang={lang}
-                    className={cn(
-                      "tap-target shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap",
-                      active ? "text-white" : "",
-                    )}
-                    style={active ? { background: "var(--color-accent)" } : { color: "var(--text-muted)" }}
-                  >
-                    {t(item.key)}
-                  </Link>
-                );
-              })}
-            </nav>
-          ) : null}
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7">{children}</main>
+      <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 sm:px-6">
+        {hasNav ? (
+          <aside className="no-print hidden w-52 shrink-0 md:block">
+            <nav className="sticky top-24 space-y-5 py-5 sm:py-7" aria-label={t("nav.sections")}>
+              {nav.home ? <SideLink item={nav.home} active={isActivePath(pathname, nav.home.href)} /> : null}
+              {nav.groups.map((group) => (
+                <div key={group.bucket}>
+                  <p
+                    className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider"
+                    style={{ color: currentBucket === group.bucket ? "var(--color-accent)" : "var(--text-faint)" }}
+                    lang={lang}
+                  >
+                    {t(BUCKET_LABEL[group.bucket])}
+                  </p>
+                  <ul className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <li key={item.href}>
+                        <SideLink item={item} active={isActivePath(pathname, item.href)} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </nav>
+          </aside>
+        ) : null}
+
+        <main className={cn("min-w-0 flex-1 py-5 sm:py-7", hasNav && "pb-24 md:pb-7")}>{children}</main>
+      </div>
+
+      {hasNav ? (
+        <>
+          <nav
+            className="no-print fixed inset-x-0 bottom-0 z-40 border-t md:hidden"
+            style={{ background: "var(--surface-solid)", borderColor: "var(--hairline)" }}
+            aria-label={t("nav.sections")}
+          >
+            <ul className="mx-auto flex max-w-lg items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom)]">
+              {nav.home ? (
+                <li className="flex-1">
+                  <Link
+                    to={nav.home.href}
+                    lang={lang}
+                    className="tap-target flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium"
+                    style={{ color: isActivePath(pathname, nav.home.href) ? "var(--color-accent)" : "var(--text-muted)" }}
+                  >
+                    <LayoutDashboard className="h-5 w-5" aria-hidden />
+                    {t("nav.dashboard")}
+                  </Link>
+                </li>
+              ) : null}
+              {nav.groups.map((group) => {
+                const active = currentBucket === group.bucket;
+                const color = active ? "var(--color-accent)" : "var(--text-muted)";
+                const single = group.items.length === 1 ? group.items[0] : null;
+                const label = t(BUCKET_LABEL[group.bucket]);
+                const body = (
+                  <>
+                    <Menu className="h-5 w-5" aria-hidden />
+                    <span className="max-w-full truncate px-1">{label}</span>
+                  </>
+                );
+                return (
+                  <li key={group.bucket} className="flex-1">
+                    {single ? (
+                      <Link
+                        to={single.href}
+                        lang={lang}
+                        className="tap-target flex h-14 w-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium"
+                        style={{ color }}
+                      >
+                        {body}
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        lang={lang}
+                        onClick={() => setOpenBucket(group)}
+                        className="tap-target flex h-14 w-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium"
+                        style={{ color }}
+                        aria-haspopup="dialog"
+                      >
+                        {body}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          <Sheet open={openBucket !== null} onOpenChange={(open) => (!open ? setOpenBucket(null) : null)}>
+            <SheetContent side="bottom" className="no-print rounded-t-2xl pb-8">
+              <SheetHeader>
+                <SheetTitle lang={lang} style={{ background: "transparent" }}>
+                  {openBucket ? t(BUCKET_LABEL[openBucket.bucket]) : ""}
+                </SheetTitle>
+              </SheetHeader>
+              <ul className="mt-3 grid gap-1">
+                {openBucket?.items.map((item) => (
+                  <li key={item.href}>
+                    <SideLink item={item} active={isActivePath(pathname, item.href)} onNavigate={() => setOpenBucket(null)} />
+                  </li>
+                ))}
+              </ul>
+            </SheetContent>
+          </Sheet>
+        </>
+      ) : null}
     </div>
+  );
+}
+
+function SideLink({ item, active, onNavigate }: { item: NavItem; active: boolean; onNavigate?: () => void }) {
+  const { t, lang } = useLang();
+  return (
+    <Link
+      to={item.href}
+      lang={lang}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "tap-target flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium",
+        active ? "text-white" : "",
+      )}
+      style={active ? { background: "var(--color-accent)" } : { color: "var(--text-muted)" }}
+    >
+      {t(item.key)}
+    </Link>
   );
 }

@@ -5,6 +5,8 @@ export interface MovingAverageInput {
   oldAvgCost: Numeric;
   receivedLitres: Numeric;
   depotRate: Numeric;
+  /** Decimal places carried on the cost per litre; settings.avco_rounding_decimals, 4 by default. */
+  decimals?: number;
 }
 
 /**
@@ -29,9 +31,10 @@ export function movingAverageCost(input: MovingAverageInput): Decimal {
   }
 
   const totalValue = oldStock.times(oldCost).plus(received.times(rate));
-  // Cost per litre is carried at 4 dp; rounding it to paisa here would drift
-  // measurably across a 12,000 L tank.
-  return totalValue.dividedBy(totalLitres).toDecimalPlaces(4, D.ROUND_HALF_UP);
+  // Cost per litre is carried at 4 dp unless the admin sets otherwise; rounding
+  // it to paisa here would drift measurably across a 12,000 L tank.
+  const places = Math.min(6, Math.max(2, Math.trunc(input.decimals ?? 4)));
+  return totalValue.dividedBy(totalLitres).toDecimalPlaces(places, D.ROUND_HALF_UP);
 }
 
 export interface DieselProfitInput {

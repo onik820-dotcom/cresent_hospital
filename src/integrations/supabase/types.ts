@@ -3066,9 +3066,17 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
         }[]
       }
+      admin_edit_record: {
+        Args: { p_changes: Json; p_id: string; p_reason: string; p_table: string }
+        Returns: Json
+      }
       admin_exists: {
         Args: never
         Returns: boolean
+      }
+      recalculate_shift_if_closed: {
+        Args: { p_shift_id: string }
+        Returns: Json
       }
       recalculate_shift: {
         Args: { p_shift_id: string }

@@ -10,9 +10,11 @@ import { EquipmentControls } from '@/components/stock/equipment-controls';
 import type { DispenserOverview, TankOverview } from '@/lib/data/overview';
 import type { DashboardKpis } from '@/lib/data/dashboard';
 import { ClosingCashCard } from '@/components/dashboard/closing-cash-card';
+import { KpiRow } from '@/components/dashboard/kpi-row';
 
 export function AdminDashboard({
   tanks = [],
+  kpis,
 }: {
   tanks: TankOverview[];
   dispensers: DispenserOverview[];
@@ -23,6 +25,8 @@ export function AdminDashboard({
 
   return (
     <div className="space-y-5">
+      {kpis ? <KpiRow kpis={kpis} /> : null}
+
       {expiringCharts.length > 0 ? (
         <GlassCard className="flex items-start gap-3" lift={false}>
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 state-watch" aria-hidden />

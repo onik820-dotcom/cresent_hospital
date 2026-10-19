@@ -10,6 +10,8 @@ import { FormWindow } from '@/components/ui/form-window';
 import { TruckCapacityCard } from '@/components/settings/truck-capacity-card';
 import { BankNamesCard } from '@/components/settings/bank-names-card';
 import { ExpenseHeadsCard } from '@/components/settings/expense-heads-card';
+import { ShiftDefaultsCard, ThresholdsCard } from '@/components/settings/thresholds-card';
+import { ReportLabelsCard } from '@/components/settings/report-labels-card';
 import { deletePartyName, deleteSku, savePartyName, saveSku } from '@/components/settings-actions';
 import type { PartyOption, SettingsOptions, SkuOption } from '@/lib/data/settings';
 
@@ -43,6 +45,9 @@ export function SettingsScreen({ options }: { options: SettingsOptions }) {
         </Muted>
       </header>
 
+      <ThresholdsCard />
+      <ShiftDefaultsCard />
+      <ReportLabelsCard />
       <TruckCapacityCard />
       <BankNamesCard />
       <ExpenseHeadsCard />
