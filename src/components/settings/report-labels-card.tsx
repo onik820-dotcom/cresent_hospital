@@ -62,8 +62,8 @@ export function ReportLabelsCard() {
     setMessage(res.ok ? { ok: true, text: bn ? 'সংরক্ষিত হয়েছে' : 'Saved' } : { ok: false, text: res.error ?? 'Could not save' });
   }
 
-  const pair = (value: Bilingual, onEn: (v: string) => void, onBn: (v: string) => void, label: string) => (
-    <div className="grid gap-2 sm:grid-cols-[10rem_1fr_1fr] sm:items-center">
+  const pair = (id: string, value: Bilingual, onEn: (v: string) => void, onBn: (v: string) => void, label: string) => (
+    <div key={id} className="grid gap-2 sm:grid-cols-[10rem_1fr_1fr] sm:items-center">
       <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }} lang={lang}>
         {label}
       </span>
@@ -92,6 +92,7 @@ export function ReportLabelsCard() {
       <div className="space-y-2">
         {SECTION_KEYS.map((s) =>
           pair(
+            s.key,
             labels[s.key],
             (v) => set(s.key, 'en', v),
             (v) => set(s.key, 'bn', v),
@@ -105,7 +106,7 @@ export function ReportLabelsCard() {
           {bn ? 'পাঁচটি স্বাক্ষরের ঘর' : 'The five signature lines'}
         </p>
         {labels.signature_lines.map((line, i) =>
-          pair(line, (v) => setLine(i, 'en', v), (v) => setLine(i, 'bn', v), `${i + 1}`),
+          pair(`line-${i}`, line, (v) => setLine(i, 'en', v), (v) => setLine(i, 'bn', v), `${i + 1}`),
         )}
       </div>
 

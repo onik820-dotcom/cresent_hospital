@@ -348,7 +348,15 @@ function AuditTab({ shiftId, refreshKey }: { shiftId: string; refreshKey: number
                 </p>
                 {e.kind === 'added' ? (
                   <p className="tabular text-xs" style={{ color: 'var(--text-muted)' }}>
-                    {e.changes.filter((c) => c.field === 'amount').map((c) => formatBDT(String(c.after), lang)).join('')}
+                    {e.changes
+                      .map((c) =>
+                        c.field === 'amount' ? formatBDT(String(c.after), lang)
+                        : c.field === 'reading' ? `${bn ? 'রিডিং' : 'Reading'} ${c.after}`
+                        : c.field === 'dip_mm' ? `${c.after} mm`
+                        : null,
+                      )
+                      .filter(Boolean)
+                      .join(' · ')}
                   </p>
                 ) : e.kind === 'edited' ? (
                   <ul className="space-y-0.5 text-xs">

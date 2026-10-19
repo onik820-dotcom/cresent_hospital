@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useLang } from '@/lib/i18n/provider';
 
@@ -39,7 +40,11 @@ export function FormWindow({
     };
   }, [onClose]);
 
-  return (
+  // Rendered into <body>, not where it was opened: a window opened from inside a
+  // table cell, a card with a backdrop blur, or another window would otherwise be
+  // positioned against that ancestor instead of the screen.
+  if (typeof document === 'undefined') return null;
+  return createPortal(
     <div
       className="no-print fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6"
       style={{ background: 'rgba(0,0,0,0.45)' }}
@@ -78,6 +83,7 @@ export function FormWindow({
 
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

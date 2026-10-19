@@ -42,10 +42,10 @@ const FIELDS: Record<EditableTable, FieldSpec[]> = {
   ],
 };
 
-const KIND_LABEL: Record<EditableTable, { en: string; bn: string }> = {
-  expenses: { en: 'Expense', bn: 'খরচ' },
-  bank_transactions: { en: 'Bank', bn: 'ব্যাংক' },
-  credit_sales: { en: 'Credit sale', bn: 'বাকি বিক্রি' },
+const KIND_LABEL: Record<EditableTable, { en: string; bn: string; a: 'a' | 'an' }> = {
+  expenses: { en: 'Expense', bn: 'খরচ', a: 'an' },
+  bank_transactions: { en: 'Bank', bn: 'ব্যাংক', a: 'a' },
+  credit_sales: { en: 'Credit sale', bn: 'বাকি বিক্রি', a: 'a' },
 };
 
 const INPUT = 'tap-target w-full rounded-xl border bg-transparent px-3 py-2 text-sm outline-none';
@@ -211,7 +211,7 @@ function EditWindow({ table, id, onClose, onDone }: { table: EditableTable; id: 
           <p className="text-sm" lang={lang}>
             {bn
               ? `আপনি ${shiftText ? `${shiftText}-এর` : `${when} তারিখের`} একটি ${kind.bn} রেকর্ড সংশোধন করছেন।`
-              : `You are editing a ${kind.en.toLowerCase()} record from ${shiftText ?? when}.`}{' '}
+              : `You are editing ${kind.a} ${kind.en.toLowerCase()} record from ${shiftText ?? when}.`}{' '}
             {recalculates
               ? bn
                 ? 'সংরক্ষণ করলে সেই শিফটের নগদ হিসাব ও স্টক নতুন করে হিসাব হবে। চালিয়ে যাবেন?'
