@@ -1,0 +1,1 @@
+ALTER TYPE public.paid_by ADD VALUE IF NOT EXISTS 'petty';

@@ -1,0 +1,2 @@
+ALTER TABLE public.bank_transactions ADD COLUMN IF NOT EXISTS from_drawer boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.bank_transactions.from_drawer IS 'True when the credit is cash taken out of the shift drawer; it reduces cash in drawer and the shift close subtracts it.';

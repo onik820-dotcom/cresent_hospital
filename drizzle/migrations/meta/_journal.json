@@ -1,0 +1,552 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789962157287,
+      "tag": "0000_0001_extensions_and_enums",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789962282791,
+      "tag": "0001_0002_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789962312109,
+      "tag": "0002_0003_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789962378828,
+      "tag": "0003_0004_functions",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789962405699,
+      "tag": "0004_0005_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789962484595,
+      "tag": "0005_0006_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789962553793,
+      "tag": "0006_0007_seed_and_calibration",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789962633212,
+      "tag": "0007_0008_calibration_tank1",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789962725225,
+      "tag": "0008_0009_calibration_tank2",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789962751954,
+      "tag": "0009_0010_harden_functions",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789962770960,
+      "tag": "0010_0011_0012_trgm_and_intent",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789962800624,
+      "tag": "0011_0013_admin_equipment_and_calibration_rpcs",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789962850053,
+      "tag": "0012_0014_0015_shift_close_computation_and_reopen",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789962893140,
+      "tag": "0013_0016_0017_sync_helper_and_close_shift",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789962981571,
+      "tag": "0014_0018_tanker_delivery",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789963239631,
+      "tag": "0015_0019_credit_control",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1789963311361,
+      "tag": "0016_0020_cash_chain_and_own_use",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789963347949,
+      "tag": "0017_0021_ledger_ordering",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789963389093,
+      "tag": "0018_0022_document_security_definer_intent",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1789963428645,
+      "tag": "0019_0023_profit_and_loss",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1789963474706,
+      "tag": "0020_0024_daily_sheet",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1789963503254,
+      "tag": "0021_0025_dashboard_kpis",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1789963568163,
+      "tag": "0022_0026_lubricant_sales_reach_the_close",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1789963626816,
+      "tag": "0023_0027_rows_belong_to_their_shift",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1789963668786,
+      "tag": "0024_0028_chat_and_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1789963703842,
+      "tag": "0025_0029_variance_floor",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1789963787936,
+      "tag": "0026_0030_shared_variance_rule_and_own_use_book",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1789963823992,
+      "tag": "0027_0031_accounts_by_invitation",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1789963847048,
+      "tag": "0028_0032_people_roster",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1789963870422,
+      "tag": "0029_0033_invitation_grants_and_intent",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1789975719665,
+      "tag": "0030_sale_settlement_and_approvals",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1789995210374,
+      "tag": "0031_realtime_for_approved_feed",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790004283243,
+      "tag": "0032_lub_sku_unit",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790022261276,
+      "tag": "0033_tanker_quantity_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1790022384465,
+      "tag": "0034_compartment_receipt_quantity_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1790022419949,
+      "tag": "0035_compartment_receipt_search_path",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1790022470802,
+      "tag": "0036_quantity_only_dip_zero_sentinel",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1790022524500,
+      "tag": "0037_record_delivery_default_arrived_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1790022589799,
+      "tag": "0038_record_delivery_correct_shape",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1790022632032,
+      "tag": "0039_quantity_only_compartment_checks",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1790023572318,
+      "tag": "0040_edit_tanker_delivery",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1790263790601,
+      "tag": "0041_restrict_equipment_reads_and_storage_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1790265274591,
+      "tag": "0042_md_may_open_shift",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1790358565347,
+      "tag": "0043_add_accountant_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1790358593438,
+      "tag": "0044_accountant_access_and_edit_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1790604491858,
+      "tag": "0045_petty_paid_by",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1790610267420,
+      "tag": "0046_lub_unit_pcs",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1790619116808,
+      "tag": "0047_refill_sold_litres",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1790621917332,
+      "tag": "0048_link_refill_to_open_shift",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1790622650237,
+      "tag": "0049_shift_close_refill_includes_sold",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1790624707999,
+      "tag": "0050_tank_stock_from_closed_shift",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1790626893297,
+      "tag": "0051_purchased_oil_exact",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1790628785573,
+      "tag": "0052_bank_mirror_payments_expenses",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1790669933244,
+      "tag": "0053_daily_sheet_meter_opening",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1790673824957,
+      "tag": "0054_bank_from_drawer",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1790689907038,
+      "tag": "0055_opening_stock_from_physical",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1790691976510,
+      "tag": "0056_no_opening_cash_in_close",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1790857869341,
+      "tag": "0057_opening_stock_refill_flag",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1790863898737,
+      "tag": "0058_shift_close_exclude_opening_stock_refill",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1790864075889,
+      "tag": "0059_refill_cost_uses_purchased_oil_cost",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1790876460247,
+      "tag": "0060_hide_petty_cash_from_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1790877532240,
+      "tag": "0061_shift_change_10am_10pm",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1790877572734,
+      "tag": "0062_pnl_lub_qty_by_unit",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1790878399013,
+      "tag": "0063_pnl_lub_cost_fallback",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1790908898395,
+      "tag": "0064_admin_void_record",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1790908983448,
+      "tag": "0065_admin_void_lub_stock",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1790910834739,
+      "tag": "0066_allow_zero_dip_before",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1790922089124,
+      "tag": "0067_shift_close_opening_dip_refills_and_petty",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1790935245367,
+      "tag": "0068_shift_close_counts_saved_expenses",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1790960737369,
+      "tag": "0069_purchased_oil_offset",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1790961509048,
+      "tag": "0070_pl_include_petty_cash_in",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1790974935738,
+      "tag": "0071_tank_return_to_purchased",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1791035914785,
+      "tag": "0072_shift_stock_returned_litres",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1791035952140,
+      "tag": "0073_daily_sheet_returned_litres",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1791038486122,
+      "tag": "0074_guard_credit_amount_and_opening_due",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1791211285665,
+      "tag": "0075_admin_reclose_shift",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1791265628160,
+      "tag": "0076_reclose_keeps_credit_sales",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1791374960932,
+      "tag": "0077_reclose_keeps_new_entries",
+      "breakpoints": true
+    }
+  ]
+}
